@@ -1,0 +1,94 @@
+[package]
+name = "daly-bms"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "daly-bms-bin"
+path = "src/main.rs"
+
+[lib]
+#name = "daly_bms_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+
+[package.metadata.cargo-android]
+app-dependencies = [
+    "com.google.android.material:material:1.8.0",
+]
+project-dependencies = [ "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.21" ]
+app-plugins = [ "org.jetbrains.kotlin.android" ]
+app-theme-parent = "Theme.MaterialComponents.DayNight.DarkActionBar"
+
+[dependencies]
+egui-typed-input = { git = "https://github.com/TimTheBig/egui_typed_input", version = "0.1.0" }
+env_logger = "0.11.8"
+log = "0.4.27"
+ordered-float = "5.0.0"
+rustfft = { version = "6.2.0", features = ["wasm_simd"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+eframe = { version = "0.31", default-features = false, features = [ "glow" ] } # you can see the default features here: https://github.com/emilk/egui/blob/master/crates/eframe/Cargo.toml#L34
+egui = { version = "0.31", default-features = false }
+js-sys = "0.3.77"
+wasm-bindgen = "0.2.100"
+wasm-bindgen-futures = "0.4.50"
+web-sys = { version = "0.3.77", features = [
+    "ResponseInit",
+    "DecompressionStream",
+    "ReadableStream",
+    "Response",
+    "CompressionFormat",
+    "WritableStream",
+    "ReadableWritablePair",
+    "StreamPipeOptions",
+    "ReadableStreamDefaultReader",
+    "BlobPropertyBag",
+    "Blob",
+    "Performance",
+    "Window",
+    "Bluetooth",
+    "BluetoothDevice", 
+    "BluetoothRemoteGattCharacteristic",
+    "BluetoothRemoteGattServer",
+    "BluetoothRemoteGattService",
+    "BluetoothCharacteristicProperties",
+    "RequestDeviceOptions",
+  ] }
+
+[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
+eframe = { version = "0.31.1", default-features = false, features = [ "glow" ] } # you can see the default features here: https://github.com/emilk/egui/blob/master/crates/eframe/Cargo.toml#L34
+egui = { version = "0.31.1", default-features = false }
+
+[target.'cfg(target_os = "android")'.dependencies]
+egui = { version = "0.31", default-features = false, features = [ "default_fonts" ] } # default features, including embedded fonts
+egui-winit = { version = "0.31", default-features = false }
+egui-wgpu = { version = "0.31", features = [ "winit" ] }
+winit = { version = "0.30", features = ["android-native-activity"] }
+wgpu = "25.0"
+pollster = "0.4"
+android_logger = "0.15"
+
+
+[features]
+default = ["font_hack"]
+font_ubuntu_light = []
+font_ubuntu_light_compressed = []
+font_hack = []
+# berkeley mono does not contain the PI character, so you should also include a fallback font
+font_berkeley_mono = []
+
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = "z"
+#strip = true
+
+# doesn't work: https://github.com/rust-lang/cargo/issues/4897
+#[profile.release.target.wasm32-unknown-unknown]
+#panic = "abort"
+
+[profile.dev]
+#opt-level = "s"
+#panic = "abort"

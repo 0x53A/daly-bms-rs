@@ -1,0 +1,8 @@
+[app]
+name = "daly-bms"
+stylized-name = "Daly BMS"
+identifier = "com.x53a.dalybms"
+template-pack = "egui"
+
+[apple]
+development-team = "0x53A"
