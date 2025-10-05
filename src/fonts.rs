@@ -23,6 +23,8 @@
 #[cfg(feature = "font_ubuntu_light")]
 pub const UBUNTU_LIGHT: &[u8] = include_bytes!("../fonts/Ubuntu-Light.ttf");
 
+pub const CYNATAR: &[u8] = include_bytes!("../fonts/Cynatar.otf");
+
 #[cfg(feature = "font_hack")]
 pub const HACK: &[u8] = include_bytes!("../fonts/Hack-Regular.ttf");
 

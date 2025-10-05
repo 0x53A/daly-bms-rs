@@ -124,10 +124,9 @@ pub fn add_fonts_to_ctx(egui_ctx: &egui::Context) {
         Arc::new(FontData::from_static(crate::fonts::UBUNTU_LIGHT)),
     );
 
-    #[cfg(feature = "font_ubuntu_light_compressed")]
     font_data.insert(
-        "Ubuntu-Light".to_owned(),
-        Arc::new(FontData::from_owned(crate::fonts::UBUNTU_LIGHT.to_vec())),
+        "Cynatar".to_owned(),
+        Arc::new(FontData::from_static(crate::fonts::CYNATAR)),
     );
 
     // // Bigger emojis, and more. <http://jslegers.github.io/emoji-icon-font/>:
@@ -170,6 +169,11 @@ pub fn add_fonts_to_ctx(egui_ctx: &egui::Context) {
             // "NotoEmoji-Regular".to_owned(),
             // "emoji-icon-font".to_owned(),
         ],
+    );
+
+    families.insert(
+        FontFamily::Name("Cynatar".into()),
+        vec!["Cynatar".to_owned()],
     );
 
     let fd = FontDefinitions {

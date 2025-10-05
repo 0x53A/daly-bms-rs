@@ -1,11 +1,12 @@
 // WebBluetooth functionality using web_sys types
 use js_sys::Uint8Array;
+use web_sys::BluetoothLeScanFilterInit;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 use web_sys::{
-    Bluetooth, BluetoothDevice, BluetoothRemoteGattCharacteristic, BluetoothRemoteGattServer,
+    BluetoothDevice, BluetoothRemoteGattCharacteristic, BluetoothRemoteGattServer,
     BluetoothRemoteGattService,
 };
 
@@ -26,8 +27,10 @@ pub fn start_scan(
         };
 
         // Request device with Daly service UUIDs
-        let mut options = web_sys::RequestDeviceOptions::new();
-        options.set_accept_all_devices(true);
+        let options = web_sys::RequestDeviceOptions::new();
+        let filter = BluetoothLeScanFilterInit::new();
+        filter.set_name_prefix("DL-");
+        options.set_filters(&js_sys::Array::of1(&filter));
 
         let optional_services = js_sys::Array::new();
         optional_services.push(&JsValue::from_str("0000fff0-0000-1000-8000-00805f9b34fb"));

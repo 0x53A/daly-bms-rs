@@ -1,6 +1,8 @@
 use eframe::egui;
+use egui::{Color32, FontFamily, FontId};
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::Arc;
 
 #[cfg(target_arch = "wasm32")]
 use crate::bluetooth as bt;
@@ -183,7 +185,32 @@ impl Default for BMSApp {
 impl BMSApp {
     pub fn ui(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Daly BMS (WebBluetooth)");
+
+            // Decorative header: emulate two-tone misprint by painting text twice with offsets
+            let painter = ui.painter();
+            let rect = ui.max_rect();
+            let x = rect.left() + 24.0; // left-align with a small left margin
+            let y = rect.top() + 18.0;
+            let text = "Daly BMS";
+            // pink shadow behind
+            painter.text(
+                egui::pos2(x + 4.0, y + 2.0),
+                egui::Align2::LEFT_TOP,
+                text,
+                FontId::new(36.0, FontFamily::Name(Arc::from("Cynatar"))),
+                Color32::from_rgb(255, 45, 149),
+            );
+            // foreground yellow
+            painter.text(
+                egui::pos2(x, y),
+                egui::Align2::LEFT_TOP,
+                text,
+                FontId::new(36.0, FontFamily::Name(Arc::from("Cynatar"))),
+                Color32::from_rgb(255, 212, 0),
+            );
+
+            // add vertical gap so the button appears below the header
+            ui.add_space(64.0);
 
             ui.horizontal(|ui| {
                 #[cfg(target_arch = "wasm32")]

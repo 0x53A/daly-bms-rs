@@ -48,11 +48,14 @@ web-sys = { version = "0.3.77", features = [
     "Performance",
     "Window",
     "Bluetooth",
-    "BluetoothDevice", 
+    "BluetoothDataFilterInit",
+    "BluetoothDevice",
+    "BluetoothLeScanFilterInit",
     "BluetoothRemoteGattCharacteristic",
     "BluetoothRemoteGattServer",
     "BluetoothRemoteGattService",
     "BluetoothCharacteristicProperties",
+    "BluetoothServiceDataMap",
     "RequestDeviceOptions",
   ] }
 
@@ -73,7 +76,6 @@ android_logger = "0.15"
 [features]
 default = ["font_hack"]
 font_ubuntu_light = []
-font_ubuntu_light_compressed = []
 font_hack = []
 # berkeley mono does not contain the PI character, so you should also include a fallback font
 font_berkeley_mono = []
