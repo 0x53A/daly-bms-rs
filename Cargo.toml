@@ -21,11 +21,15 @@ app-plugins = [ "org.jetbrains.kotlin.android" ]
 app-theme-parent = "Theme.MaterialComponents.DayNight.DarkActionBar"
 
 [dependencies]
+anyhow = "1.0.100"
 egui-typed-input = { git = "https://github.com/TimTheBig/egui_typed_input", version = "0.1.0" }
 env_logger = "0.11.8"
+getrandom = { version = "0.3.3", features = ["wasm_js"] }
 log = "0.4.27"
 ordered-float = "5.0.0"
+ractor_wormhole = { git = "https://github.com/0x53A/ractor-wormhole", version = "0.1.0" }
 rustfft = { version = "6.2.0", features = ["wasm_simd"] }
+uuid = { version = "1.18.1", features = ["js"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 eframe = { version = "0.31", default-features = false, features = [ "glow" ] } # you can see the default features here: https://github.com/emilk/egui/blob/master/crates/eframe/Cargo.toml#L34

@@ -1,11 +1,51 @@
 use eframe::egui;
 use egui::{Color32, FontFamily, FontId};
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use anyhow::Result;
+use crate::ractor::ActorRef;
 
 #[cfg(target_arch = "wasm32")]
 use crate::bluetooth as bt;
+#[cfg(target_arch = "wasm32")]
+use std::cell::RefCell;
+#[cfg(target_arch = "wasm32")]
+use std::rc::Rc;
+
+// -----------------
+// Shared State Types
+// -----------------
+
+#[derive(Clone, Debug)]
+pub struct AppState {
+    pub readings: Vec<Reading>,
+    #[cfg(target_arch = "wasm32")]
+    pub is_connected: bool,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self {
+            readings: Vec::new(),
+            #[cfg(target_arch = "wasm32")]
+            is_connected: false,
+        }
+    }
+}
+
+// -----------------
+// Handler Messages
+// -----------------
+
+#[derive(Debug)]
+pub enum HandlerMessage {
+    #[cfg(target_arch = "wasm32")]
+    StartScan,
+    #[cfg(target_arch = "wasm32")]
+    RequestStatus,
+    ClearReadings,
+    #[cfg(target_arch = "wasm32")]
+    AddReading(Reading),
+}
 
 #[derive(Clone, Debug)]
 pub struct Reading {
@@ -162,8 +202,56 @@ fn parse_daly_status_from_bytes(data: &[u8]) -> Option<ParsedStatus> {
     Some(res)
 }
 
+// -----------------
+// Handler Implementation
+// -----------------
+
+fn create_handler(
+    state: Arc<Mutex<AppState>>,
+) -> Result<ActorRef<HandlerMessage>> {
+    use ractor_wormhole::util::FnActor;
+    
+    let (handler, _) = FnActor::start_fn_instant(|mut ctx| async move {
+        while let Some(msg) = ctx.rx.recv().await {
+            match msg {
+                // These messages will be handled after being sent
+                // but won't actually do the bluetooth operations in the handler
+                // The bluetooth operations still happen in the main thread
+                #[cfg(target_arch = "wasm32")]
+                HandlerMessage::StartScan => {
+                    // Update connection state - actual scan happens in UI thread
+                    let mut state_guard = state.lock().unwrap();
+                    state_guard.is_connected = true;
+                }
+                
+                #[cfg(target_arch = "wasm32")]
+                HandlerMessage::RequestStatus => {
+                    // This is just a message placeholder
+                    // Actual request happens in UI thread
+                }
+                
+                HandlerMessage::ClearReadings => {
+                    let mut state_guard = state.lock().unwrap();
+                    state_guard.readings.clear();
+                }
+                
+                #[cfg(target_arch = "wasm32")]
+                HandlerMessage::AddReading(reading) => {
+                    let mut state_guard = state.lock().unwrap();
+                    state_guard.readings.push(reading);
+                }
+            }
+        }
+    })?;
+    
+    Ok(handler)
+}
+
 pub struct BMSApp {
-    readings: Rc<RefCell<Vec<Reading>>>,
+    state: Arc<Mutex<AppState>>,
+    handler: ActorRef<HandlerMessage>,
+    
+    // Keep these for the bluetooth API bridge
     #[cfg(target_arch = "wasm32")]
     _listeners: Rc<RefCell<Vec<wasm_bindgen::prelude::Closure<dyn FnMut(wasm_bindgen::JsValue)>>>>,
     #[cfg(target_arch = "wasm32")]
@@ -172,17 +260,40 @@ pub struct BMSApp {
 
 impl Default for BMSApp {
     fn default() -> Self {
+        let state = Arc::new(Mutex::new(AppState::default()));
+        
+        #[cfg(target_arch = "wasm32")]
+        let listeners = Rc::new(RefCell::new(Vec::new()));
+        #[cfg(target_arch = "wasm32")]
+        let control_char = Rc::new(RefCell::new(None));
+        
+        let handler = create_handler(
+            state.clone(),
+        ).expect("Failed to create handler");
+        
         Self {
-            readings: Rc::new(RefCell::new(Vec::new())),
+            state,
+            handler,
             #[cfg(target_arch = "wasm32")]
-            _listeners: Rc::new(RefCell::new(Vec::new())),
+            _listeners: listeners,
             #[cfg(target_arch = "wasm32")]
-            control_char: Rc::new(RefCell::new(None)),
+            control_char,
         }
     }
 }
 
 impl BMSApp {
+    #[cfg(target_arch = "wasm32")]
+    fn readings_ref(&self) -> Rc<RefCell<Vec<Reading>>> {
+        // Create a temporary Rc<RefCell<>> wrapper for the bluetooth API
+        // This bridges the gap between Arc<Mutex<>> and Rc<RefCell<>>
+        let readings = {
+            let state_guard = self.state.lock().unwrap();
+            state_guard.readings.clone()
+        };
+        Rc::new(RefCell::new(readings))
+    }
+    
     pub fn ui(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default().show(ctx, |ui| {
 
@@ -216,8 +327,11 @@ impl BMSApp {
                 #[cfg(target_arch = "wasm32")]
                 {
                     if ui.button("Start scan / connect").clicked() {
+                        // Send message to handler for state update
+                        let _ = self.handler.send_message(HandlerMessage::StartScan);
+                        // Perform bluetooth operation (stays in UI thread for now)
                         bt::start_scan(
-                            self.readings.clone(),
+                            self.readings_ref(),
                             self._listeners.clone(),
                             self.control_char.clone()
                         );
@@ -226,10 +340,11 @@ impl BMSApp {
                     ui.separator();
                     ui.label("Control:");
                     if ui.button("Request status").clicked() {
+                        // Send message to handler
+                        let _ = self.handler.send_message(HandlerMessage::RequestStatus);
+                        // Perform bluetooth operation
                         if self.control_char.borrow().is_some() {
                             bt::write_control_command(self.control_char.clone());
-                        } else {
-                            ui.label("No control characteristic discovered yet.");
                         }
                     }
                 }
@@ -240,7 +355,7 @@ impl BMSApp {
                 }
 
                 if ui.button("Clear readings").clicked() {
-                    self.readings.borrow_mut().clear();
+                    let _ = self.handler.send_message(HandlerMessage::ClearReadings);
                 }
             });
 
@@ -249,7 +364,8 @@ impl BMSApp {
             egui::ScrollArea::vertical()
                 .auto_shrink([false; 2])
                 .show(ui, |ui| {
-                    let rows = self.readings.borrow();
+                    let state = self.state.lock().unwrap();
+                    let rows = &state.readings;
                     if rows.is_empty() {
                         ui.label("No readings yet. Click 'Start scan / connect' and allow Bluetooth access.");
                     } else {

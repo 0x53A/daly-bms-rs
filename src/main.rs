@@ -6,6 +6,8 @@ mod app;
 mod bluetooth;
 mod fonts;
 
+pub use ractor_wormhole::ractor;
+
 use egui::{FontData, FontDefinitions, FontFamily};
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
