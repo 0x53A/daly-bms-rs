@@ -1,3 +1,17 @@
+This app currently only runs in the web. There are fragments for native/mobile in this repository from the template used, but those platforms aren't implemented currently, and likely won't be in the near future.
+
+------
+
+## What is it?
+
+This is a web app that allows to control Daly BMS (Battery Management System) over WebBluetooth. It runs on Chrome and Chrome based browsers, including on Android, but NOT Firefox, nor on iOS.
+
+The current version was vibe-coded in an afternoon, so don't expect too much. It can read the voltages:
+
+<img width="826" height="892" alt="image" src="https://github.com/user-attachments/assets/42e9d369-b3e4-4d3f-b403-9dfb59b2d134" />
+
+----
+
 ## Web
 
 ```
@@ -13,27 +27,10 @@ trunk build --release
 
 ## Windows
 
-```
-# debug
-cargo run
-
-# release
-cargo build --release
-```
+n/a
 
 ## Android
 
-```
-# one time
-cargo install --git https://github.com/tauri-apps/cargo-mobile2
-# once after clone (or clean) to create the /gen/ folder
-cargo mobile init
+n/a
 
-# debug
-cargo android run
-
-# release (one of these)
-cargo android apk build --release # universal apk for armv7, aarch64, i686, x86-64
-cargo android apk build --release aarch64 # only arm64 (newer devices)
-cargo android apk build --release --split-per-abi # one apk per platform
-```
+-----
