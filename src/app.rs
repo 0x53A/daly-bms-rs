@@ -12,6 +12,37 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 // -----------------
+// Architecture Overview
+// -----------------
+//
+// This application follows a clean separation between UI and business logic:
+//
+// 1. **Shared State (AppState)**: Contains the application data (readings, connection status)
+//    - Wrapped in Arc<Mutex<>> for thread-safe access
+//    - UI reads from it, Handler writes to it
+//
+// 2. **Handler Messages**: Enum of all possible actions the handler can perform
+//    - ClearReadings, StartScan, RequestStatus, AddReading
+//    - UI sends these messages to the handler via ActorRef
+//
+// 3. **Handler Actor**: Async actor that processes messages and updates state
+//    - Created using ractor_wormhole's FnActor
+//    - Runs independently, processing messages from a queue
+//    - Updates AppState in response to messages
+//
+// 4. **BMSApp**: The main UI struct
+//    - Holds a reference to the shared state (Arc<Mutex<AppState>>)
+//    - Holds a reference to the handler (ActorRef<HandlerMessage>)
+//    - UI sends messages to handler and reads from shared state
+//    - For wasm32/bluetooth, still keeps Rc<RefCell<>> for the bluetooth API
+//
+// Benefits:
+// - Clear separation of concerns
+// - Easy to test business logic independently
+// - State updates are centralized in the handler
+// - UI is just a view + message sender
+
+// -----------------
 // Shared State Types
 // -----------------
 
