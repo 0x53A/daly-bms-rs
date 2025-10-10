@@ -1,7 +1,7 @@
 [package]
 name = "daly-bms"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [[bin]]
 name = "daly-bms-bin"
@@ -26,6 +26,8 @@ env_logger = "0.11.8"
 log = "0.4"
 ordered-float = "5"
 rustfft = { version = "6", features = ["wasm_simd"] }
+anyhow = "1.0"
+futures = "0.3"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 eframe = { version = "0.32", default-features = false, features = [ "glow" ] } # you can see the default features here: https://github.com/emilk/egui/blob/master/crates/eframe/Cargo.toml#L34
