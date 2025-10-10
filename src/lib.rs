@@ -3,6 +3,7 @@
 mod app;
 #[cfg(target_arch = "wasm32")]
 mod bluetooth;
+mod data_structure;
 
 #[cfg(target_os = "android")]
 use winit::platform::android::activity::AndroidApp;

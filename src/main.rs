@@ -4,6 +4,7 @@
 mod app;
 #[cfg(target_arch = "wasm32")]
 mod bluetooth;
+mod data_structure;
 mod fonts;
 
 use egui::{FontData, FontDefinitions, FontFamily};
